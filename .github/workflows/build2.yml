@@ -1,4 +1,4 @@
-name: Build SumatraPDF
+name: Build and Upload SumatraPDF
 
 on:
   push:
@@ -22,3 +22,9 @@ jobs:
         export CC=x86_64-w64-mingw32-gcc
         export CXX=x86_64-w64-mingw32-g++
         ./build.sh
+
+    - name: Upload SumatraPDF
+      uses: actions/upload-artifact@v2
+      with:
+        name: SumatraPDF
+        path: ./sumatrapdf.exe
