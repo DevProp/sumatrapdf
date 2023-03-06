@@ -1,39 +1,30 @@
-name: Build
+name: Build and Upload SumatraPDF
+
 on:
   push:
+    branches:
+      - main
   pull_request:
-  repository_dispatch:
-    types: [build-pre-rel]
+
 jobs:
   build:
-    name: Build
-    runs-on: windows-2022
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Check out source code
-        uses: actions/checkout@v3
-        with:
-          # needed to calc build number via git log --oneline
-          fetch-depth: 0
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y mingw-w64
 
-      - name: Build
-        env:
-          CERT_PWD: ${{ secrets.CERT_PWD }}
-        run: .\doit.bat -ci
+    - name: Build SumatraPDF
+      run: |
+        export CC=x86_64-w64-mingw32-gcc
+        export CXX=x86_64-w64-mingw32-g++
+        ./build.sh
 
-      # a separate step from -ci to make logs easier to read
-      - name: Upload to spaces and s3
-        env:
-          AWS_SECRET: ${{ secrets.AWS_SECRET }}
-          AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
-          BB_SECRET: ${{ secrets.BB_SECRET }}
-          BB_ACCESS: ${{ secrets.BB_ACCESS }}
-          SPACES_KEY: ${{ secrets.SPACES_KEY }}
-          SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
-          WASABI_ACCESS: ${{ secrets.WASABI_ACCESS }}
-          WASABI_SECRET: ${{ secrets.WASABI_SECRET }}
-        run: .\doit.bat -ci-upload
+    - name: Upload SumatraPDF
+      uses: actions/upload-artifact@v2
+      with:
+        name: SumatraPDF
+        path: ./sumatrapdf.exe
